@@ -1,0 +1,8 @@
+pyramid
+SQLAlchemy
+psycopg2-binary
+alembic
+zope.sqlalchemy
+pyramid_tm
+firebase-admin
+PyJWT
