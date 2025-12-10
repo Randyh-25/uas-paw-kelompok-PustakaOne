@@ -1,36 +1,34 @@
 import enum
-from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Enum, Integer, String
+from sqlalchemy import Column, DateTime, Enum, Integer, String, func
 from sqlalchemy.orm import relationship
+from passlib.hash import bcrypt
 
-from ..db.base import Base
+from . import Base
 
 
-class UserRole(str, enum.Enum):
-    ADMIN = "ADMIN"
-    LIBRARIAN = "LIBRARIAN"
-    STUDENT = "STUDENT"
+class UserRole(enum.Enum):
+    member = "member"
+    librarian = "librarian"
 
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    email = Column(String(255), unique=True, nullable=False)
-    name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole, name="userrole"), nullable=False, default=UserRole.STUDENT)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    name = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(Enum(UserRole, native_enum=False, length=50), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    borrowings = relationship("Borrowing", back_populates="user")
+    borrowings = relationship("Borrowing", back_populates="member", cascade="all, delete-orphan")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            "name": self.name,
-            "role": self.role.value if self.role else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
+    def set_password(self, raw_password: str) -> None:
+        self.password_hash = bcrypt.hash(raw_password)
+
+    def verify_password(self, raw_password: str) -> bool:
+        return bcrypt.verify(raw_password, self.password_hash)
+
+
+__all__ = ["User", "UserRole"]

@@ -6,6 +6,7 @@ env/
 *.egg-info/
 dist/
 build/
+frontend/node_modules/
 
 # Environment variables
 .env

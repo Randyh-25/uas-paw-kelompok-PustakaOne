@@ -1,5 +1,16 @@
-from .user import User, UserRole
-from .book import Book
-from .borrowing import Borrowing
+from sqlalchemy.orm import declarative_base
 
-__all__ = ["User", "UserRole", "Book", "Borrowing"]
+Base = declarative_base()
+
+# Import models so Alembic can autodiscover metadata
+from .user import User, UserRole  # noqa: E402,F401
+from .book import Book  # noqa: E402,F401
+from .borrowing import Borrowing  # noqa: E402,F401
+
+__all__ = [
+	"Base",
+	"User",
+	"UserRole",
+	"Book",
+	"Borrowing",
+]

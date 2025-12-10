@@ -1,84 +1,128 @@
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
-from pyramid.httpexceptions import HTTPBadRequest, HTTPNotFound
+from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound
 from pyramid.view import view_config
 
-from app.db import DBSession
-from app.models import Book, Borrowing
-from app.security.firebase_auth import require_auth
-from app.security.permissions import MANAGE_BORROWINGS, check_permission
+from ..models.book import Book
+from ..models.borrowing import Borrowing
+from ..models.user import UserRole
+from .utils import current_user, json_payload, require_role
 
-MAX_ACTIVE_BORROWINGS = 3
-LATE_FEE_PER_DAY = 1000
-
-
-def includeme(config):
-    config.add_route("borrowings_list", "/borrowings")
-    config.add_route("borrowings_return", "/borrowings/{id}/return")
-    config.add_view(list_borrowings, route_name="borrowings_list", request_method="GET", renderer="json")
-    config.add_view(borrow_book, route_name="borrowings_list", request_method="POST", renderer="json")
-    config.add_view(return_book, route_name="borrowings_return", request_method="POST", renderer="json")
+FINE_PER_DAY = 5000
+BORROW_LIMIT = 3
+BORROW_DURATION_DAYS = 14
 
 
-@view_config(route_name="borrowings_list", request_method="GET", renderer="json")
-@require_auth
-def list_borrowings(context, request):
-    check_permission(request.user, MANAGE_BORROWINGS)
-    borrowings = DBSession.query(Borrowing).all()
-    return [b.to_dict() for b in borrowings]
+def serialize_borrowing(borrow: Borrowing):
+    return {
+        "id": borrow.id,
+        "book": {
+            "id": borrow.book.id,
+            "title": borrow.book.title,
+            "author": borrow.book.author,
+        },
+        "member_id": borrow.member_id,
+        "borrow_date": borrow.borrow_date.isoformat(),
+        "due_date": borrow.due_date.isoformat(),
+        "return_date": borrow.return_date.isoformat() if borrow.return_date else None,
+        "fine": float(borrow.fine or 0),
+    }
 
 
-@view_config(route_name="borrowings_list", request_method="POST", renderer="json")
-@require_auth
-def borrow_book(context, request):
-    user = request.user
-    active_count = DBSession.query(Borrowing).filter(Borrowing.user_id == user.id, Borrowing.returned_at.is_(None)).count()
-    if active_count >= MAX_ACTIVE_BORROWINGS:
-        raise HTTPBadRequest(f"Maximum active borrowings reached: {MAX_ACTIVE_BORROWINGS}")
+@view_config(route_name="borrow.create", request_method="POST", renderer="json")
+def borrow_book(request):
+    user = current_user(request)
+    require_role(user, [UserRole.member.value])
 
-    data = request.json_body or {}
-    book_id = data.get("book_id")
-    if not book_id:
-        raise HTTPBadRequest("book_id is required")
-
-    book = DBSession.query(Book).get(book_id)
+    book_id = int(request.matchdict["book_id"])
+    book = request.dbsession.get(Book, book_id)
     if not book:
-        raise HTTPNotFound("Book not found")
-
+        raise HTTPNotFound(json_body={"error": "Book not found"})
     if book.copies_available <= 0:
-        raise HTTPBadRequest("No copies available")
+        raise HTTPBadRequest(json_body={"error": "No copies available"})
 
-    due_days = data.get("due_days", 7)
-    borrowing = Borrowing(
-        user_id=user.id,
-        book_id=book.id,
-        due_date=datetime.utcnow() + timedelta(days=due_days),
+    active_count = (
+        request.dbsession.query(Borrowing)
+        .filter(Borrowing.member_id == user.id, Borrowing.return_date.is_(None))
+        .count()
     )
-    DBSession.add(borrowing)
+    if active_count >= BORROW_LIMIT:
+        raise HTTPBadRequest(json_body={"error": "Borrowing limit reached (3 active)"})
+
+    today = date.today()
+    borrowing = Borrowing(
+        book=book,
+        member=user,
+        borrow_date=today,
+        due_date=today + timedelta(days=BORROW_DURATION_DAYS),
+        fine=0,
+    )
     book.copies_available -= 1
-    return borrowing.to_dict()
+    request.dbsession.add(borrowing)
+
+    return {"message": "Borrowed successfully", "borrowing": serialize_borrowing(borrowing)}
 
 
-@view_config(route_name="borrowings_return", request_method="POST", renderer="json")
-@require_auth
-def return_book(context, request):
-    borrowing_id = int(request.matchdict.get("id"))
-    borrowing = DBSession.query(Borrowing).get(borrowing_id)
+@view_config(route_name="return.create", request_method="POST", renderer="json")
+def return_book(request):
+    user = current_user(request)
+    borrowing_id = int(request.matchdict["borrowing_id"])
+
+    borrowing = request.dbsession.get(Borrowing, borrowing_id)
     if not borrowing:
-        raise HTTPNotFound("Borrowing not found")
+        raise HTTPNotFound(json_body={"error": "Borrowing not found"})
 
-    if borrowing.returned_at:
-        return borrowing.to_dict()
+    if user.role == UserRole.member and borrowing.member_id != user.id:
+        raise HTTPForbidden(json_body={"error": "Cannot return other member's borrow"})
 
-    borrowing.returned_at = datetime.utcnow()
-    overdue_days = (borrowing.returned_at.date() - borrowing.due_date.date()).days
-    if overdue_days > 0:
-        borrowing.late_fee = overdue_days * LATE_FEE_PER_DAY
+    if borrowing.return_date:
+        raise HTTPBadRequest(json_body={"error": "Already returned"})
+
+    today = date.today()
+    borrowing.return_date = today
+
+    if today > borrowing.due_date:
+        days_late = (today - borrowing.due_date).days
+        borrowing.fine = days_late * FINE_PER_DAY
     else:
-        borrowing.late_fee = 0
+        borrowing.fine = 0
 
-    book = DBSession.query(Book).get(borrowing.book_id)
-    if book:
-        book.copies_available += 1
+    borrowing.book.copies_available += 1
+    return {"message": "Return processed", "borrowing": serialize_borrowing(borrowing)}
 
-    return borrowing.to_dict()
+
+@view_config(route_name="borrowings.list", request_method="GET", renderer="json")
+def list_borrowings(request):
+    user = current_user(request)
+
+    query = request.dbsession.query(Borrowing).join(Book)
+    only_active = request.params.get("active") == "true"
+
+    if user.role == UserRole.member:
+        query = query.filter(Borrowing.member_id == user.id)
+    else:
+        member_id = request.params.get("member_id")
+        if member_id:
+            query = query.filter(Borrowing.member_id == int(member_id))
+
+    if only_active:
+        query = query.filter(Borrowing.return_date.is_(None))
+
+    borrows = query.order_by(Borrowing.borrow_date.desc()).all()
+    return {"items": [serialize_borrowing(b) for b in borrows]}
+
+
+@view_config(route_name="history.list", request_method="GET", renderer="json")
+def borrowing_history(request):
+    user = current_user(request)
+
+    query = request.dbsession.query(Borrowing).join(Book)
+    if user.role == UserRole.member:
+        query = query.filter(Borrowing.member_id == user.id)
+    else:
+        member_id = request.params.get("member_id")
+        if member_id:
+            query = query.filter(Borrowing.member_id == int(member_id))
+
+    borrows = query.order_by(Borrowing.borrow_date.desc()).all()
+    return {"items": [serialize_borrowing(b) for b in borrows]}

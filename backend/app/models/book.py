@@ -1,9 +1,7 @@
-from datetime import datetime
-
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Integer, String, func
 from sqlalchemy.orm import relationship
 
-from ..db.base import Base
+from . import Base
 
 
 class Book(Base):
@@ -12,22 +10,14 @@ class Book(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String(255), nullable=False)
     author = Column(String(255), nullable=False)
-    isbn = Column(String(50), unique=True, nullable=True)
+    isbn = Column(String(50), unique=True, nullable=False, index=True)
+    category = Column(String(100), nullable=False)
     copies_total = Column(Integer, nullable=False, default=1)
     copies_available = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     borrowings = relationship("Borrowing", back_populates="book")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "author": self.author,
-            "isbn": self.isbn,
-            "copies_total": self.copies_total,
-            "copies_available": self.copies_available,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
+
+__all__ = ["Book"]

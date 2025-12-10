@@ -1,31 +1,40 @@
 from pyramid.config import Configurator
-from pyramid.response import Response
 from sqlalchemy import engine_from_config
+from sqlalchemy.orm import sessionmaker
+from zope.sqlalchemy import register as zope_register
 
-from .config import Settings
-from .db.base import Base
-from .db.session import DBSession, configure_engine
+from .models import Base
+
+
+def get_engine(settings):
+    """Create a SQLAlchemy engine from Pyramid settings."""
+    return engine_from_config(settings, prefix="sqlalchemy.")
+
+
+def get_session_factory(engine):
+    return sessionmaker(bind=engine, future=True)
+
+
+def get_tm_session(session_factory, transaction_manager):
+    dbsession = session_factory()
+    zope_register(dbsession, transaction_manager=transaction_manager)
+    return dbsession
 
 
 def main(global_config, **settings):
-    settings_obj = Settings(settings)
-    engine = engine_from_config(settings, prefix="sqlalchemy.")
-    configure_engine(engine)
+    """Pyramid application factory."""
+    engine = get_engine(settings)
+    session_factory = get_session_factory(engine)
     Base.metadata.bind = engine
 
-    config = Configurator(settings=settings)
-    config.registry.settings_obj = settings_obj
-
-    config.include("pyramid_tm")
-
-    config.include("app.security")
-    config.include("app.views.health")
-    config.include("app.views.auth")
-    config.include("app.views.books")
-    config.include("app.views.borrowings")
-    config.include("app.views.users")
-
-    config.scan("app.security")
-    config.scan("app.views")
-
-    return config.make_wsgi_app()
+    with Configurator(settings=settings) as config:
+        config.include("pyramid_retry")
+        config.include("pyramid_tm")
+        config.add_request_method(
+            lambda request: get_tm_session(session_factory, request.tm),
+            "dbsession",
+            reify=True,
+        )
+        config.include(".routes")
+        config.scan(".views")
+        return config.make_wsgi_app()
