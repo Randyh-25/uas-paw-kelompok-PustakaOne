@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,8 +36,9 @@ export default function BorrowingsPage() {
     try {
       await borrowApi.returnBook(token, id);
       fetchData();
+      toast.success("Book returned successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
