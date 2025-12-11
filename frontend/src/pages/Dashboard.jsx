@@ -64,11 +64,9 @@ export default function Dashboard() {
           </button>
         </div>
         {serverStatus && (
-          <div style={{ marginTop: "12px", padding: "12px", background: "#d1fae5", borderRadius: "8px", color: "#065f46" }}>
+          <div className="status-success">
             <strong>✓ Server OK</strong>
-            <pre style={{ margin: "8px 0 0", fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>
-              {JSON.stringify(serverStatus, null, 2)}
-            </pre>
+            <pre>{JSON.stringify(serverStatus, null, 2)}</pre>
           </div>
         )}
         {statusError && (
