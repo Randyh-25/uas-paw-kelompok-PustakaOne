@@ -22,7 +22,7 @@ export default function NavBar() {
   return (
     <header className="nav">
       <div className="nav-left">
-        <span className="brand">Library Management</span>
+        <span className="brand">📚 Library Management</span>
         {links.map((l) => (
           <Link key={l.to} to={l.to} className={isActive(l.to) ? "active" : ""}>
             {l.label}
@@ -33,7 +33,7 @@ export default function NavBar() {
         {user ? (
           <>
             <span className="pill">{user.role}</span>
-            <span>{user.name}</span>
+            <span className="user-name">{user.name}</span>
             <button className="ghost" onClick={logout}>
               Logout
             </button>

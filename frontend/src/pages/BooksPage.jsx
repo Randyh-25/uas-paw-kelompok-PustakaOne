@@ -11,6 +11,8 @@ export default function BooksPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [availability, setAvailability] = useState("all");
+  const [sortBy, setSortBy] = useState("title");
   const [editing, setEditing] = useState(null);
 
   const isLibrarian = user?.role === "librarian";
@@ -33,7 +35,34 @@ export default function BooksPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filtered = useMemo(() => items, [items]);
+  const filtered = useMemo(() => {
+    let filteredItems = items;
+
+    // Apply availability filter
+    if (availability === "available") {
+      filteredItems = filteredItems.filter(b => b.copies_available > 0);
+    } else if (availability === "unavailable") {
+      filteredItems = filteredItems.filter(b => b.copies_available === 0);
+    }
+
+    // Apply sorting
+    filteredItems = [...filteredItems].sort((a, b) => {
+      switch (sortBy) {
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "author":
+          return a.author.localeCompare(b.author);
+        case "category":
+          return a.category.localeCompare(b.category);
+        case "available":
+          return b.copies_available - a.copies_available;
+        default:
+          return 0;
+      }
+    });
+
+    return filteredItems;
+  }, [items, availability, sortBy]);
 
   const handleCreate = async (data) => {
     try {
@@ -81,70 +110,183 @@ export default function BooksPage() {
   return (
     <div className="stack">
       <div className="card">
-        <h2>Books</h2>
+        <div style={{ marginBottom: '24px' }}>
+          <h2>Book Catalog</h2>
+          <p className="muted">Browse and manage our complete book collection</p>
+        </div>
+
         <div className="filters">
           <input
-            placeholder="Search title/author"
+            placeholder="Search by title or author..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <input
-            placeholder="Category"
+            placeholder="Filter by category..."
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
-          <button className="btn ghost" onClick={fetchBooks}>
-            Apply
+          <select value={availability} onChange={(e) => setAvailability(e.target.value)}>
+            <option value="all">All Books</option>
+            <option value="available">Available Only</option>
+            <option value="unavailable">Unavailable Only</option>
+          </select>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option value="title">Sort by Title</option>
+            <option value="author">Sort by Author</option>
+            <option value="category">Sort by Category</option>
+            <option value="available">Sort by Availability</option>
+          </select>
+          <button className="btn" onClick={fetchBooks}>
+            Search
           </button>
+          {(search || category || availability !== "all") && (
+            <button 
+              className="btn ghost" 
+              onClick={() => {
+                setSearch("");
+                setCategory("");
+                setAvailability("all");
+                setSortBy("title");
+                fetchBooks();
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
+          {isLibrarian && (
+            <button 
+              className="btn success" 
+              onClick={() => setEditing({})}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Add New Book
+            </button>
+          )}
         </div>
+
         {loading ? (
-          <div>Loading...</div>
+          <div className="loading">Loading books...</div>
         ) : error ? (
           <div className="error">{error}</div>
-        ) : (
-          <div className="list">
-            {filtered.map((b) => (
-              <div key={b.id} className="item">
-                <div className="book-info">
-                  <div className="book-title">{b.title}</div>
-                  <div className="book-details">
-                    <div>Author: {b.author}</div>
-                    <div>Category: {b.category}</div>
-                    <div>ISBN: {b.isbn}</div>
-                  </div>
-                  <div className={`availability ${b.copies_available === 0 ? 'low' : ''}`}>
-                    Available: {b.copies_available}/{b.copies_total}
-                  </div>
-                </div>
-                <div className="actions">
-                  {isLibrarian && (
-                    <>
-                      <button className="ghost" onClick={() => setEditing(b)}>
-                        Edit
-                      </button>
-                      <button className="ghost" onClick={() => handleDelete(b.id)}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                  {user && user.role === "member" && b.copies_available > 0 && (
-                    <button className="btn" onClick={() => handleBorrow(b.id)}>
-                      Borrow
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <h3>No Books Found</h3>
+            <p>Try adjusting your search filters or add new books to the catalog.</p>
           </div>
+        ) : (
+          <>
+            {/* Statistics */}
+            <div style={{ 
+              marginBottom: '20px', 
+              padding: '16px', 
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))',
+              borderRadius: '12px',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '16px'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>
+                  {filtered.length}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Books Shown</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#059669' }}>
+                  {filtered.filter(b => b.copies_available > 0).length}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Available</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>
+                  {filtered.filter(b => b.copies_available === 0).length}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Unavailable</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#7c3aed' }}>
+                  {filtered.reduce((sum, b) => sum + b.copies_available, 0)}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Total Copies</div>
+              </div>
+            </div>
+
+            <div style={{ 
+              marginBottom: '16px', 
+              padding: '12px 16px', 
+              background: '#f8fafc', 
+              borderRadius: '10px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                Showing {filtered.length} book{filtered.length !== 1 ? 's' : ''}
+              </span>
+              <span className="muted">
+                Total available: {filtered.reduce((sum, b) => sum + b.copies_available, 0)}
+              </span>
+            </div>
+
+            <div className="list">
+              {filtered.map((b) => (
+                <div key={b.id} className="item">
+                  <div className="book-info">
+                    <div className="book-title">{b.title}</div>
+                    <div className="book-details">
+                      <div><strong>Author:</strong> {b.author}</div>
+                      <div><strong>Category:</strong> {b.category}</div>
+                      <div><strong>ISBN:</strong> {b.isbn}</div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      {b.copies_available > 0 ? (
+                        <div className="availability">
+                          {b.copies_available} of {b.copies_total} available
+                        </div>
+                      ) : (
+                        <div className="availability low">
+                          Out of stock ({b.copies_total} total)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="actions">
+                    {isLibrarian && (
+                      <>
+                        <button className="btn ghost" onClick={() => setEditing(b)}>
+                          Edit
+                        </button>
+                        <button className="btn danger" onClick={() => handleDelete(b.id)}>
+                          Delete
+                        </button>
+                      </>
+                    )}
+                    {user && user.role === "member" && b.copies_available > 0 && (
+                      <button className="btn success" onClick={() => handleBorrow(b.id)}>
+                        Borrow Book
+                      </button>
+                    )}
+                    {user && user.role === "member" && b.copies_available === 0 && (
+                      <button className="btn" disabled>
+                        Not Available
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
-      {isLibrarian && (
+      {isLibrarian && editing && (
         <div className="card">
-          <h3>{editing ? "Edit Book" : "Add Book"}</h3>
+          <h3>{editing.id ? "✏️ Edit Book" : "➕ Add New Book"}</h3>
           <BookForm
-            initial={editing || undefined}
-            onSubmit={(data) => (editing ? handleUpdate(editing.id, data) : handleCreate(data))}
+            initial={editing.id ? editing : undefined}
+            onSubmit={(data) => (editing.id ? handleUpdate(editing.id, data) : handleCreate(data))}
             onCancel={() => setEditing(null)}
           />
         </div>
