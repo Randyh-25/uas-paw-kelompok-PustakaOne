@@ -105,13 +105,15 @@ export default function BooksPage() {
           <div className="list">
             {filtered.map((b) => (
               <div key={b.id} className="item">
-                <div>
-                  <strong>{b.title}</strong>
-                  <div className="muted">
-                    {b.author} · {b.category} · ISBN {b.isbn}
+                <div className="book-info">
+                  <div className="book-title">{b.title}</div>
+                  <div className="book-details">
+                    <div>Author: {b.author}</div>
+                    <div>Category: {b.category}</div>
+                    <div>ISBN: {b.isbn}</div>
                   </div>
-                  <div className="muted">
-                    Available {b.copies_available}/{b.copies_total}
+                  <div className={`availability ${b.copies_available === 0 ? 'low' : ''}`}>
+                    Available: {b.copies_available}/{b.copies_total}
                   </div>
                 </div>
                 <div className="actions">

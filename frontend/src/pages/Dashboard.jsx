@@ -6,29 +6,31 @@ export default function Dashboard() {
 
   return (
     <div className="card">
-      <h1>Library Management</h1>
-      <p>Kelola buku, pinjam, dan kembalikan dengan cepat.</p>
+      <div style={{ textAlign: 'center' }}>
+        <h1>Welcome to Library Management</h1>
+        <p>Kelola buku, pinjam, dan kembalikan dengan cepat dan mudah.</p>
+      </div>
       <ul className="bullets">
-        <li>Browse dan cari buku.</li>
-        <li>Pinjam buku (maks 3) dan pantau status.</li>
+        <li>Browse dan cari buku favorit Anda.</li>
+        <li>Pinjam buku (maks 3) dan pantau status peminjaman.</li>
         <li>Pengembalian dengan hitung denda otomatis.</li>
         <li>Riwayat transaksi untuk Member dan Librarian.</li>
       </ul>
       {!user ? (
-        <div className="actions">
-          <Link className="btn" to="/login">
+        <div className="actions" style={{ justifyContent: 'center' }}>
+          <Link className="btn" to="/login" style={{ textDecoration: 'none' }}>
             Login
           </Link>
-          <Link className="btn ghost" to="/register">
+          <Link className="btn ghost" to="/register" style={{ textDecoration: 'none' }}>
             Register
           </Link>
         </div>
       ) : (
-        <div className="actions">
-          <Link className="btn" to="/books">
+        <div className="actions" style={{ justifyContent: 'center' }}>
+          <Link className="btn" to="/books" style={{ textDecoration: 'none' }}>
             Buka Buku
           </Link>
-          <Link className="btn ghost" to="/borrowings">
+          <Link className="btn ghost" to="/borrowings" style={{ textDecoration: 'none' }}>
             Lihat Peminjaman
           </Link>
         </div>

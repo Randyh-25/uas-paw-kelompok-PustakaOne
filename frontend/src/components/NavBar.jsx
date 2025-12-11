@@ -22,7 +22,7 @@ export default function NavBar() {
   return (
     <header className="nav">
       <div className="nav-left">
-        <span className="brand">Library</span>
+        <span className="brand">Library Management</span>
         {links.map((l) => (
           <Link key={l.to} to={l.to} className={isActive(l.to) ? "active" : ""}>
             {l.label}
