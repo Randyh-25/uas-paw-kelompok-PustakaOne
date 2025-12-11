@@ -82,7 +82,7 @@ export default function BorrowingsPage() {
               </div>
               <div className="actions">
                 {!b.return_date && (
-                  <button className="btn" onClick={() => handleReturn(b.id)}>
+                  <button className="btn ghost" onClick={() => handleReturn(b.id)}>
                     Mark Returned
                   </button>
                 )}
