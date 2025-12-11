@@ -108,5 +108,17 @@ def delete_book(request):
     if not book:
         raise HTTPNotFound(json_body={"error": "Book not found"})
 
+    # Check if there are active borrowings
+    from ..models.borrowing import Borrowing
+    active_borrows = (
+        request.dbsession.query(Borrowing)
+        .filter(Borrowing.book_id == book.id, Borrowing.return_date.is_(None))
+        .count()
+    )
+    if active_borrows > 0:
+        raise HTTPBadRequest(
+            json_body={"error": f"Cannot delete: {active_borrows} active borrowing(s)"}
+        )
+
     request.dbsession.delete(book)
     return {"message": "Book deleted"}
