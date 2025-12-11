@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -35,8 +36,9 @@ export default function BorrowingsPage() {
     try {
       await borrowApi.returnBook(token, id);
       fetchData();
+      toast.success("Book returned successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -82,7 +84,7 @@ export default function BorrowingsPage() {
               </div>
               <div className="actions">
                 {!b.return_date && (
-                  <button className="btn" onClick={() => handleReturn(b.id)}>
+                  <button className="btn ghost" onClick={() => handleReturn(b.id)}>
                     Mark Returned
                   </button>
                 )}

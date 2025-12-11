@@ -5,12 +5,17 @@ export default function NavBar() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const links = [
-    { to: "/", label: "Dashboard" },
-    { to: "/books", label: "Books" },
-    { to: "/borrowings", label: "Borrowings" },
-    { to: "/history", label: "History" },
-  ];
+  const links = user
+    ? [
+        { to: "/", label: "Dashboard" },
+        { to: "/books", label: "Books" },
+        { to: "/borrowings", label: "Borrowings" },
+        { to: "/history", label: "History" },
+      ]
+    : [
+        { to: "/", label: "Dashboard" },
+        { to: "/books", label: "Books" },
+      ];
 
   const isActive = (path) => location.pathname === path;
 
