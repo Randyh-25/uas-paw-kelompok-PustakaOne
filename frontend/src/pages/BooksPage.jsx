@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { bookApi, borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import BookForm from "../components/BookForm";
@@ -39,8 +40,9 @@ export default function BooksPage() {
       await bookApi.create(token, data);
       setEditing(null);
       fetchBooks();
+      toast.success("Book created successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -49,8 +51,9 @@ export default function BooksPage() {
       await bookApi.update(token, id, data);
       setEditing(null);
       fetchBooks();
+      toast.success("Book updated successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -59,8 +62,9 @@ export default function BooksPage() {
     try {
       await bookApi.remove(token, id);
       fetchBooks();
+      toast.success("Book deleted successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -68,8 +72,9 @@ export default function BooksPage() {
     try {
       await borrowApi.borrow(token, id);
       fetchBooks();
+      toast.success("Book borrowed successfully");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
