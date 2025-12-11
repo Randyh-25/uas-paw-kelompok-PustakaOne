@@ -17,7 +17,8 @@ class Book(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    borrowings = relationship("Borrowing", back_populates="book")
+    # Prevent deletion if borrowings exist (SET_NULL would fail due to NOT NULL constraint)
+    borrowings = relationship("Borrowing", back_populates="book", cascade="all, delete-orphan")
 
 
 __all__ = ["Book"]
