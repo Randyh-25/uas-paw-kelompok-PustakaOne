@@ -1,0 +1,484 @@
+{
+	"info": {
+		"_postman_id": "library-management-api",
+		"name": "Library Management API",
+		"description": "API untuk sistem perpustakaan dengan book cataloging, borrowing, dan return management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\",\n  \"role\": \"librarian\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register user baru dengan role member atau librarian"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Token saved: \" + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login untuk mendapatkan token"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"member123\",\n  \"role\": \"member\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register member baru"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Books",
+			"item": [
+				{
+					"name": "List All Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books"
+							]
+						},
+						"description": "Tampilkan semua buku (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books?search=python&category=programming",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "python",
+									"description": "Search by title or author"
+								},
+								{
+									"key": "category",
+									"value": "programming",
+									"description": "Filter by category"
+								}
+							]
+						},
+						"description": "Cari buku berdasarkan title/author atau filter by category"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Book Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/books/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						},
+						"description": "Get detail buku by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Book (Librarian)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Learn Python\",\n  \"author\": \"John Doe\",\n  \"isbn\": \"978-1234567890\",\n  \"category\": \"programming\",\n  \"copies_total\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/books",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books"
+							]
+						},
+						"description": "Create buku baru (Librarian only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Book (Librarian)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Learn Python (2nd Edition)\",\n  \"copies_total\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/books/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						},
+						"description": "Update buku (Librarian only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Book (Librarian)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/books/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						},
+						"description": "Delete buku (Librarian only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Borrowing",
+			"item": [
+				{
+					"name": "Borrow Book (Member)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/borrow/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"borrow",
+								"1"
+							]
+						},
+						"description": "Member pinjam buku (max 3 aktif, durasi 14 hari)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Current Borrowings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/borrowings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"borrowings"
+							]
+						},
+						"description": "List semua peminjaman (member: milik sendiri, librarian: semua)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Active Borrowings Only",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/borrowings?active=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"borrowings"
+							],
+							"query": [
+								{
+									"key": "active",
+									"value": "true",
+									"description": "Show only unreturned books"
+								}
+							]
+						},
+						"description": "List peminjaman aktif (belum dikembalikan)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Borrowings by Member (Librarian)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/borrowings?member_id=2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"borrowings"
+							],
+							"query": [
+								{
+									"key": "member_id",
+									"value": "2",
+									"description": "Filter by member ID (Librarian only)"
+								}
+							]
+						},
+						"description": "Librarian bisa filter borrowings by member ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Return",
+			"item": [
+				{
+					"name": "Return Book",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/return/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"return",
+								"1"
+							]
+						},
+						"description": "Return buku dengan borrowing ID. Denda 5000/hari jika terlambat"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "History",
+			"item": [
+				{
+					"name": "Get Borrowing History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"history"
+							]
+						},
+						"description": "Riwayat peminjaman (member: milik sendiri, librarian: semua)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get History by Member (Librarian)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/history?member_id=2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"history"
+							],
+							"query": [
+								{
+									"key": "member_id",
+									"value": "2",
+									"description": "Filter by member ID (Librarian only)"
+								}
+							]
+						},
+						"description": "Librarian bisa lihat history specific member"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:6543/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
