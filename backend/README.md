@@ -28,18 +28,35 @@ backend/
 ```
 
 ## Menjalankan secara lokal
-1. Buat dan aktifkan virtualenv di folder `backend`.
-2. Install dependensi: `pip install -r requirements.txt`
-3. Setel koneksi database di `development.ini` (`sqlalchemy.url`). Pastikan database PostgreSQL sudah dibuat.
-4. Inisialisasi tabel/migrasi:
+1. Install terlebih dahulu PostgresSQL di local komputer
+2. Buat user dan database bernama `library_db`
+3. Clone project github ini, kemudian masuk ke dalam folder `backend`
+4. Buat dan aktifkan virtualenv di folder `backend`
+  ```bash
+  # MacOS or Linux
+  python -m venv .venv
+  source .venv/bin/activate
+  ```
+5. Install dependensi: 
+  ```bash
+  pip install -r requirements.txt
+  ```
+6. Ubah konfigurasi koneksi database di `development.ini` dan `alembic.ini` di variable `sqlalchemy.url`. Sesuaikan `user` dan `password` nya.
+  ```bash
+  # development.ini
+  sqlalchemy.url = postgresql+psycopg2://user:password@localhost:5432/library_db
+  # alembic.ini
+  sqlalchemy.url = postgresql+psycopg2://user:password@localhost:5432/library_db
+  ```
+7. Inisialisasi tabel/migrasi:
    ```bash
    alembic upgrade head
    ```
-5. Jalankan server:
+8. Jalankan server:
    ```bash
    pserve development.ini --reload
    ```
-6. API tersedia di `http://localhost:6543`.
+9. API tersedia di `http://localhost:6543`.
 
 ## Endpoint utama
 - `POST /api/auth/register`
