@@ -29,17 +29,31 @@ backend/
 
 ## Menjalankan secara lokal
 1. Buat dan aktifkan virtualenv di folder `backend`.
-2. Install dependensi: `pip install -r requirements.txt`
-3. Setel koneksi database di `development.ini` (`sqlalchemy.url`). Pastikan database PostgreSQL sudah dibuat.
-4. Inisialisasi tabel/migrasi:
+2. Buat virtual environment
+    ```bash
+    python -m venv venv 
+    ``` 
+    Aktifkan virtual environment:
+    ```bash
+    # Untuk Windows
+    venv\Scripts\activate
+    # Untuk macOS/Linux
+    source venv/bin/activate
+    ```
+3. Install dependensi: `pip install -r requirements.txt`
+4. Setel koneksi database di `development.ini` (`sqlalchemy.url`). Pastikan database PostgreSQL sudah dibuat.
+5. Inisialisasi tabel/migrasi:
    ```bash
    alembic upgrade head
    ```
-5. Jalankan server:
+6. Install dependensi proyek:
+   ```bash
+   pip install -e .
+7. Jalankan server:
    ```bash
    pserve development.ini --reload
    ```
-6. API tersedia di `http://localhost:6543`.
+8. API tersedia di `http://localhost:6543`.
 
 ## Endpoint utama
 - `POST /api/auth/register`
