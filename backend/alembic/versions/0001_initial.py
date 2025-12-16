@@ -6,7 +6,6 @@ Create Date: 2025-12-10
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "0001_initial"
@@ -16,23 +15,10 @@ depends_on = None
 
 
 def upgrade():
-    # Ensure enum exists without failing if already present (idempotent)
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
-                CREATE TYPE userrole AS ENUM ('member', 'librarian');
-            END IF;
-        END$$;
-        """
-    )
-
-    user_role = postgresql.ENUM(
+    user_role = sa.Enum(
         "member",
         "librarian",
         name="userrole",
-        create_type=False,
     )
 
     op.create_table(
@@ -85,5 +71,3 @@ def downgrade():
 
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
-
-    op.execute("DROP TYPE IF EXISTS userrole")
