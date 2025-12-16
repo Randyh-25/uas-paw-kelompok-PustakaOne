@@ -2,9 +2,23 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import { bookApi } from "../api/client";
+import { useState, useEffect } from "react";
+
+const quotes = [
+  { text: "Today a reader, tomorrow a leader.", author: "Margaret Fuller" },
+  { text: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
+  { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" },
+  { text: "Reading is essential for those who seek to rise above the ordinary.", author: "Jim Rohn" },
+  { text: "Books are a uniquely portable magic.", author: "Stephen King" },
+];
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [quote, setQuote] = useState({ text: "", author: "" });
+
+  useEffect(() => {
+    setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+  }, []);
 
   const {
     data: booksData,
@@ -20,6 +34,11 @@ export default function Dashboard() {
 
   return (
     <div className="stack">
+      <div className="card" style={{ textAlign: 'center', fontStyle: 'italic', backgroundColor: 'var(--bg-tertiary)' }}>
+        <p style={{ fontSize: '1.1rem', margin: '0 0 8px 0' }}>"{quote.text}"</p>
+        <footer style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>&mdash; {quote.author}</footer>
+      </div>
+
       <div className="card">
         <h1>Selamat Datang di PustakaOne</h1>
         <p>Kelola buku, pinjam, dan kembalikan dengan cepat.</p>
