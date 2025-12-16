@@ -5,26 +5,54 @@ import { bookApi, borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import BookForm from "../components/BookForm";
 
+function PaginationControls({ page, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="actions" style={{ marginTop: "20px", justifyContent: "center" }}>
+      <button
+        className="btn ghost"
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1}
+      >
+        &larr; Previous
+      </button>
+      <span style={{ padding: "0 12px", color: "var(--text-secondary)" }}>
+        Page {page} of {totalPages}
+      </span>
+      <button
+        className="btn ghost"
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        Next &rarr;
+      </button>
+    </div>
+  );
+}
+
 export default function BooksPage() {
   const { token, user } = useAuth();
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
 
   const isLibrarian = user?.role === "librarian";
 
+  const queryParams = { search, category, page };
+
   const {
-    data: items,
+    data,
     isLoading,
     isError,
     error,
-    refetch,
   } = useQuery({
-    queryKey: ["books", { search, category }],
-    queryFn: () => bookApi.list({ search, category }),
-    initialData: { items: [] },
+    queryKey: ["books", queryParams],
+    queryFn: () => bookApi.list(queryParams),
+    initialData: { items: [], total_pages: 1, page: 1 },
   });
 
   const createMutation = useMutation({
@@ -79,7 +107,13 @@ export default function BooksPage() {
     }
   };
 
-  const filtered = useMemo(() => items?.items || [], [items]);
+  const handleFilterChange = () => {
+    setPage(1);
+    queryClient.invalidateQueries(["books", { search, category, page: 1 }]);
+  };
+
+  const books = data?.items || [];
+  const totalPages = data?.total_pages || 1;
 
   return (
     <div className="stack">
@@ -96,7 +130,7 @@ export default function BooksPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
-          <button className="btn ghost" onClick={() => refetch()}>
+          <button className="btn ghost" onClick={handleFilterChange}>
             Apply
           </button>
         </div>
@@ -106,7 +140,7 @@ export default function BooksPage() {
           <div className="error">{error.message}</div>
         ) : (
           <div className="list">
-            {filtered.map((b) => (
+            {books.map((b) => (
               <div key={b.id} className="item">
                 <div>
                   <strong>{b.title}</strong>
@@ -146,6 +180,11 @@ export default function BooksPage() {
             ))}
           </div>
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
 
       {isLibrarian && (

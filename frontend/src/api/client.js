@@ -28,8 +28,10 @@ export const authApi = {
 };
 
 export const bookApi = {
-  list: ({ search = "", category = "" } = {}) =>
-    apiFetch(`/books?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`),
+  list: ({ search = "", category = "", page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ search, category, page, limit });
+    return apiFetch(`/books?${params.toString()}`);
+  },
   get: (id) => apiFetch(`/books/${id}`),
   create: (token, payload) => apiFetch("/books", { method: "POST", token, body: payload }),
   update: (token, id, payload) => apiFetch(`/books/${id}`, { method: "PUT", token, body: payload }),
