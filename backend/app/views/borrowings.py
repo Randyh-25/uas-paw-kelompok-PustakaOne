@@ -1,3 +1,4 @@
+import math
 from datetime import date, timedelta
 
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPNotFound
@@ -95,6 +96,12 @@ def return_book(request):
 def list_borrowings(request):
     user = current_user(request)
 
+    try:
+        page = int(request.params.get("page", 1))
+        limit = int(request.params.get("limit", 10))
+    except ValueError:
+        raise HTTPBadRequest(json_body={"error": "Invalid page or limit parameter"})
+
     query = request.dbsession.query(Borrowing).join(Book)
     only_active = request.params.get("active") == "true"
 
@@ -108,13 +115,29 @@ def list_borrowings(request):
     if only_active:
         query = query.filter(Borrowing.return_date.is_(None))
 
-    borrows = query.order_by(Borrowing.borrow_date.desc()).all()
-    return {"items": [serialize_borrowing(b) for b in borrows]}
+    total_items = query.count()
+    total_pages = math.ceil(total_items / limit)
+    offset = (page - 1) * limit
+
+    borrows = query.order_by(Borrowing.borrow_date.desc()).limit(limit).offset(offset).all()
+    return {
+        "items": [serialize_borrowing(b) for b in borrows],
+        "page": page,
+        "limit": limit,
+        "total_items": total_items,
+        "total_pages": total_pages,
+    }
 
 
 @view_config(route_name="history.list", request_method="GET", renderer="json")
 def borrowing_history(request):
     user = current_user(request)
+
+    try:
+        page = int(request.params.get("page", 1))
+        limit = int(request.params.get("limit", 10))
+    except ValueError:
+        raise HTTPBadRequest(json_body={"error": "Invalid page or limit parameter"})
 
     query = request.dbsession.query(Borrowing).join(Book)
     if user.role == UserRole.member:
@@ -124,5 +147,15 @@ def borrowing_history(request):
         if member_id:
             query = query.filter(Borrowing.member_id == int(member_id))
 
-    borrows = query.order_by(Borrowing.borrow_date.desc()).all()
-    return {"items": [serialize_borrowing(b) for b in borrows]}
+    total_items = query.count()
+    total_pages = math.ceil(total_items / limit)
+    offset = (page - 1) * limit
+
+    borrows = query.order_by(Borrowing.borrow_date.desc()).limit(limit).offset(offset).all()
+    return {
+        "items": [serialize_borrowing(b) for b in borrows],
+        "page": page,
+        "limit": limit,
+        "total_items": total_items,
+        "total_pages": total_pages,
+    }

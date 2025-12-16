@@ -41,14 +41,14 @@ export const bookApi = {
 export const borrowApi = {
   borrow: (token, bookId) => apiFetch(`/borrow/${bookId}`, { method: "POST", token }),
   returnBook: (token, borrowingId) => apiFetch(`/return/${borrowingId}`, { method: "POST", token }),
-  listBorrowings: (token, { active = false, member_id } = {}) => {
-    const params = new URLSearchParams();
+  listBorrowings: (token, { active = false, member_id, page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ page, limit });
     if (active) params.set("active", "true");
     if (member_id) params.set("member_id", member_id);
     return apiFetch(`/borrowings?${params.toString()}`, { token });
   },
-  history: (token, { member_id } = {}) => {
-    const params = new URLSearchParams();
+  history: (token, { member_id, page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ page, limit });
     if (member_id) params.set("member_id", member_id);
     return apiFetch(`/history?${params.toString()}`, { token });
   },
