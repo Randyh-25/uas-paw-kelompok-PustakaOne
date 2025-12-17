@@ -27,18 +27,15 @@ def cors_response_callback(event):
     response = event.response
 
     origin = request.headers.get("Origin")
-    allowed_origins = (
-        "https://pustakaone.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:6543",
-    )
-
-    if origin in allowed_origins:
+    
+    # Allow all origins
+    if origin:
         response.headers.update({
             "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
         })
 
 
