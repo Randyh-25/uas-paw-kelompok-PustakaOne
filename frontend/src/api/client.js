@@ -1,4 +1,6 @@
-const API_BASE = "/api";
+const API_BASE = import.meta.env.DEV 
+  ? "/api" 
+  : "https://pawbe.callmeoda.web.id/api";
 
 async function apiFetch(path, { method = "GET", token, body } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -32,8 +34,10 @@ export const authApi = {
 };
 
 export const bookApi = {
-  list: ({ search = "", category = "" } = {}) =>
-    apiFetch(`/books?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`),
+  list: ({ search = "", category = "", page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ search, category, page, limit });
+    return apiFetch(`/books?${params.toString()}`);
+  },
   get: (id) => apiFetch(`/books/${id}`),
   create: (token, payload) => apiFetch("/books", { method: "POST", token, body: payload }),
   update: (token, id, payload) => apiFetch(`/books/${id}`, { method: "PUT", token, body: payload }),
@@ -43,14 +47,14 @@ export const bookApi = {
 export const borrowApi = {
   borrow: (token, bookId) => apiFetch(`/borrow/${bookId}`, { method: "POST", token }),
   returnBook: (token, borrowingId) => apiFetch(`/return/${borrowingId}`, { method: "POST", token }),
-  listBorrowings: (token, { active = false, member_id } = {}) => {
-    const params = new URLSearchParams();
+  listBorrowings: (token, { active = false, member_id, page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ page, limit });
     if (active) params.set("active", "true");
     if (member_id) params.set("member_id", member_id);
     return apiFetch(`/borrowings?${params.toString()}`, { token });
   },
-  history: (token, { member_id } = {}) => {
-    const params = new URLSearchParams();
+  history: (token, { member_id, page = 1, limit = 10 } = {}) => {
+    const params = new URLSearchParams({ page, limit });
     if (member_id) params.set("member_id", member_id);
     return apiFetch(`/history?${params.toString()}`, { token });
   },

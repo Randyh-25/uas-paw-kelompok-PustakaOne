@@ -1,53 +1,51 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 export default function HistoryPage() {
   const { token, user } = useAuth();
-  const [items, setItems] = useState([]);
   const [memberId, setMemberId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await borrowApi.history(token, {
-        member_id: user.role === "librarian" && memberId ? memberId : undefined,
-      });
-      setItems(res.items || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const isLibrarian = user.role === "librarian";
+
+  const queryParams = {
+    member_id: isLibrarian && memberId ? memberId : undefined,
   };
 
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const {
+    data: historyData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["history", queryParams],
+    queryFn: () => borrowApi.history(token, queryParams),
+    initialData: { items: [] },
+  });
+
+  const items = historyData?.items || [];
 
   return (
     <div className="card">
       <h2>History</h2>
       <div className="filters">
-        {user.role === "librarian" && (
+        {isLibrarian && (
           <input
             placeholder="Member ID (optional)"
             value={memberId}
             onChange={(e) => setMemberId(e.target.value)}
           />
         )}
-        <button className="btn ghost" onClick={fetchData}>
+        <button className="btn ghost" onClick={() => refetch()}>
           Refresh
         </button>
       </div>
-      {loading ? (
+      {isLoading ? (
         <div>Loading...</div>
-      ) : error ? (
-        <div className="error">{error}</div>
+      ) : isError ? (
+        <div className="error">{error.message}</div>
       ) : (
         <div className="list">
           {items.map((b) => (

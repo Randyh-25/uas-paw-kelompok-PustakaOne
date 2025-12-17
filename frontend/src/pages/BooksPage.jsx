@@ -1,82 +1,119 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bookApi, borrowApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import BookForm from "../components/BookForm";
 
+function PaginationControls({ page, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="actions" style={{ marginTop: "20px", justifyContent: "center" }}>
+      <button
+        className="btn ghost"
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1}
+      >
+        &larr; Previous
+      </button>
+      <span style={{ padding: "0 12px", color: "var(--text-secondary)" }}>
+        Page {page} of {totalPages}
+      </span>
+      <button
+        className="btn ghost"
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        Next &rarr;
+      </button>
+    </div>
+  );
+}
+
 export default function BooksPage() {
   const { token, user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
 
   const isLibrarian = user?.role === "librarian";
 
-  const fetchBooks = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await bookApi.list({ search, category });
-      setItems(res.items || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryParams = { search, category, page };
 
-  useEffect(() => {
-    fetchBooks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["books", queryParams],
+    queryFn: () => bookApi.list(queryParams),
+    initialData: { items: [], total_pages: 1, page: 1 },
+  });
 
-  const filtered = useMemo(() => items, [items]);
-
-  const handleCreate = async (data) => {
-    try {
-      await bookApi.create(token, data);
-      setEditing(null);
-      fetchBooks();
+  const createMutation = useMutation({
+    mutationFn: (newData) => bookApi.create(token, newData),
+    onSuccess: () => {
       toast.success("Book created successfully");
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleUpdate = async (id, data) => {
-    try {
-      await bookApi.update(token, id, data);
       setEditing(null);
-      fetchBooks();
+      queryClient.invalidateQueries(["books"]);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => bookApi.update(token, id, data),
+    onSuccess: () => {
       toast.success("Book updated successfully");
-    } catch (err) {
+      setEditing(null);
+      queryClient.invalidateQueries(["books"]);
+    },
+    onError: (err) => {
       toast.error(err.message);
-    }
-  };
+    },
+  });
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete book?")) return;
-    try {
-      await bookApi.remove(token, id);
-      fetchBooks();
+  const deleteMutation = useMutation({
+    mutationFn: (id) => bookApi.remove(token, id),
+    onSuccess: () => {
       toast.success("Book deleted successfully");
-    } catch (err) {
+      queryClient.invalidateQueries(["books"]);
+    },
+    onError: (err) => {
       toast.error(err.message);
+    },
+  });
+
+  const borrowMutation = useMutation({
+    mutationFn: (id) => borrowApi.borrow(token, id),
+    onSuccess: () => {
+      toast.success("Book borrowed successfully");
+      queryClient.invalidateQueries(["books"]);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
+  const handleDelete = (id) => {
+    if (window.confirm("Delete book?")) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const handleBorrow = async (id) => {
-    try {
-      await borrowApi.borrow(token, id);
-      fetchBooks();
-      toast.success("Book borrowed successfully");
-    } catch (err) {
-      toast.error(err.message);
-    }
+  const handleFilterChange = () => {
+    setPage(1);
+    queryClient.invalidateQueries(["books", { search, category, page: 1 }]);
   };
+
+  const books = data?.items || [];
+  const totalPages = data?.total_pages || 1;
 
   return (
     <div className="stack">
@@ -93,17 +130,17 @@ export default function BooksPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
-          <button className="btn ghost" onClick={fetchBooks}>
+          <button className="btn ghost" onClick={handleFilterChange}>
             Apply
           </button>
         </div>
-        {loading ? (
+        {isLoading ? (
           <div>Loading...</div>
-        ) : error ? (
-          <div className="error">{error}</div>
+        ) : isError ? (
+          <div className="error">{error.message}</div>
         ) : (
           <div className="list">
-            {filtered.map((b) => (
+            {books.map((b) => (
               <div key={b.id} className="item">
                 <div>
                   <strong>{b.title}</strong>
@@ -120,13 +157,21 @@ export default function BooksPage() {
                       <button className="ghost" onClick={() => setEditing(b)}>
                         Edit
                       </button>
-                      <button className="ghost" onClick={() => handleDelete(b.id)}>
+                      <button
+                        className="ghost"
+                        onClick={() => handleDelete(b.id)}
+                        disabled={deleteMutation.isPending}
+                      >
                         Delete
                       </button>
                     </>
                   )}
                   {user && user.role === "member" && b.copies_available > 0 && (
-                    <button className="btn" onClick={() => handleBorrow(b.id)}>
+                    <button
+                      className="btn"
+                      onClick={() => borrowMutation.mutate(b.id)}
+                      disabled={borrowMutation.isPending}
+                    >
                       Borrow
                     </button>
                   )}
@@ -135,6 +180,11 @@ export default function BooksPage() {
             ))}
           </div>
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
 
       {isLibrarian && (
@@ -142,7 +192,11 @@ export default function BooksPage() {
           <h3>{editing ? "Edit Book" : "Add Book"}</h3>
           <BookForm
             initial={editing || undefined}
-            onSubmit={(data) => (editing ? handleUpdate(editing.id, data) : handleCreate(data))}
+            onSubmit={(data) =>
+              editing
+                ? updateMutation.mutate({ id: editing.id, data })
+                : createMutation.mutate(data)
+            }
             onCancel={() => setEditing(null)}
           />
         </div>

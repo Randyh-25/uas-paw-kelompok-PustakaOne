@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 export default function NavBar() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   const links = user
@@ -22,7 +24,7 @@ export default function NavBar() {
   return (
     <header className="nav">
       <div className="nav-left">
-        <span className="brand">Library</span>
+        <span className="brand">PustakaOne</span>
         {links.map((l) => (
           <Link key={l.to} to={l.to} className={isActive(l.to) ? "active" : ""}>
             {l.label}
@@ -30,6 +32,9 @@ export default function NavBar() {
         ))}
       </div>
       <div className="nav-right">
+        <button onClick={toggleTheme} className="ghost" style={{ marginRight: '10px', padding: '6px' }}>
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
         {user ? (
           <>
             <span className="pill">{user.role}</span>
