@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:6543",
+        target: "https://pawbe.callmeoda.web.id/",
         changeOrigin: true,
       },
     },

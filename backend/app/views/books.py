@@ -1,3 +1,4 @@
+import math
 from pyramid.httpexceptions import HTTPBadRequest, HTTPNotFound
 from pyramid.view import view_config
 
@@ -23,6 +24,12 @@ def list_books(request):
     search = (request.params.get("search") or "").strip().lower()
     category = (request.params.get("category") or "").strip().lower()
 
+    try:
+        page = int(request.params.get("page", 1))
+        limit = int(request.params.get("limit", 10))
+    except ValueError:
+        raise HTTPBadRequest(json_body={"error": "Invalid page or limit parameter"})
+
     query = request.dbsession.query(Book)
     if search:
         pattern = f"%{search}%"
@@ -30,8 +37,18 @@ def list_books(request):
     if category:
         query = query.filter(Book.category.ilike(f"%{category}%"))
 
-    books = query.order_by(Book.title.asc()).all()
-    return {"items": [serialize_book(book) for book in books]}
+    total_items = query.count()
+    total_pages = math.ceil(total_items / limit)
+    offset = (page - 1) * limit
+
+    books = query.order_by(Book.title.asc()).limit(limit).offset(offset).all()
+    return {
+        "items": [serialize_book(book) for book in books],
+        "page": page,
+        "limit": limit,
+        "total_items": total_items,
+        "total_pages": total_pages,
+    }
 
 
 @view_config(route_name="books.detail", request_method="GET", renderer="json")
