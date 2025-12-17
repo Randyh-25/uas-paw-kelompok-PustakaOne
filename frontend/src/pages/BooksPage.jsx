@@ -154,15 +154,15 @@ export default function BooksPage() {
                 <div className="actions">
                   {isLibrarian && (
                     <>
-                      <button className="ghost" onClick={() => setEditing(b)}>
-                        Edit
+                      <button className="btn btn-edit" onClick={() => setEditing(b)}>
+                         Edit
                       </button>
                       <button
-                        className="ghost"
+                        className="btn btn-delete"
                         onClick={() => handleDelete(b.id)}
                         disabled={deleteMutation.isPending}
                       >
-                        Delete
+                         Delete
                       </button>
                     </>
                   )}
