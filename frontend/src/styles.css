@@ -87,21 +87,47 @@ body {
   margin-right: 16px;
 }
 
+.nav .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .nav .pill {
   padding: 4px 10px;
   border-radius: 999px;
   background-color: var(--nav-pill-bg);
   color: var(--nav-pill-text);
-  margin-right: 8px;
+  font-size: 0.875rem;
+}
+
+.nav .user-name {
+  font-weight: 500;
+  color: var(--nav-text-active);
 }
 
 .nav .ghost {
   background: transparent;
   border: 1px solid var(--nav-ghost-border);
   color: var(--nav-ghost-text);
-  padding: 6px 10px;
+  padding: 6px 12px;
   cursor: pointer;
   border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav .ghost:hover {
+  background-color: var(--nav-pill-bg);
+  border-color: var(--nav-pill-text);
+}
+
+.nav .theme-toggle {
+  padding: 6px 10px;
+  font-size: 1.2rem;
+}
+
+.nav .logout-btn {
+  margin-left: 4px;
 }
 
 .content {
