@@ -33,19 +33,19 @@ export default function Dashboard() {
       {/* Hero Section */}
       <div className="hero-section">
         <div className="hero-content">
-          <h1 className="hero-title">Selamat Datang di PustakaOne</h1>
+          <h1 className="hero-title">Welcome to LibraryOne</h1>
           <p className="hero-subtitle">
-            Platform perpustakaan digital modern untuk mengelola dan meminjam koleksi buku
+            Modern digital library platform to manage and borrow book collections
           </p>
           {!user ? (
             <div className="hero-actions">
-              <Link className="btn btn-hero" to="/login">Mulai Sekarang</Link>
-              <Link className="btn ghost btn-hero" to="/books">Jelajahi Koleksi</Link>
+              <Link className="btn btn-hero" to="/login">Get Started</Link>
+              <Link className="btn ghost btn-hero" to="/books">Browse Collection</Link>
             </div>
           ) : (
             <div className="hero-actions">
-              <Link className="btn btn-hero" to="/books">Jelajahi Buku</Link>
-              <Link className="btn ghost btn-hero" to="/borrowings">Peminjaman Saya</Link>
+              <Link className="btn btn-hero" to="/books">Browse Books</Link>
+              <Link className="btn ghost btn-hero" to="/borrowings">My Borrowings</Link>
             </div>
           )}
         </div>
@@ -62,20 +62,20 @@ export default function Dashboard() {
       {/* Features Section */}
       <div className="features-grid">
         <div className="feature-card">
-          <h3>Koleksi Lengkap</h3>
-          <p>Ribuan buku dari berbagai kategori siap untuk dipinjam</p>
+          <h3>Complete Collection</h3>
+          <p>Thousands of books from various categories ready to borrow</p>
         </div>
         <div className="feature-card">
-          <h3>Pencarian Mudah</h3>
-          <p>Temukan buku favorit dengan filter dan pencarian cepat</p>
+          <h3>Easy Search</h3>
+          <p>Find your favorite books with quick filters and search</p>
         </div>
         <div className="feature-card">
-          <h3>Pinjam Cepat</h3>
-          <p>Sistem peminjaman otomatis dengan tracking real-time</p>
+          <h3>Quick Borrow</h3>
+          <p>Automatic borrowing system with real-time tracking</p>
         </div>
         <div className="feature-card">
-          <h3>Riwayat Lengkap</h3>
-          <p>Pantau semua aktivitas peminjaman dan pengembalian</p>
+          <h3>Complete History</h3>
+          <p>Monitor all borrowing and return activities</p>
         </div>
       </div>
 
@@ -83,32 +83,32 @@ export default function Dashboard() {
       <div className="stats-section">
         <div className="stat-item">
           <div className="stat-value">{totalBooks}+</div>
-          <div className="stat-label">Total Buku</div>
+          <div className="stat-label">Total Books</div>
         </div>
         <div className="stat-item">
-          <div className="stat-value">14 Hari</div>
-          <div className="stat-label">Durasi Pinjam</div>
+          <div className="stat-value">14 Days</div>
+          <div className="stat-label">Borrow Period</div>
         </div>
         <div className="stat-item">
-          <div className="stat-value">3 Buku</div>
-          <div className="stat-label">Maks Pinjam</div>
+          <div className="stat-value">3 Books</div>
+          <div className="stat-label">Max Borrow</div>
         </div>
         <div className="stat-item">
           <div className="stat-value">24/7</div>
-          <div className="stat-label">Akses Online</div>
+          <div className="stat-label">Online Access</div>
         </div>
       </div>
 
       {/* Latest Books Section */}
       <div className="card">
         <div className="section-header">
-          <h2>Koleksi Terbaru</h2>
-          <Link to="/books" className="view-all-link">Lihat Semua →</Link>
+          <h2>Latest Collection</h2>
+          <Link to="/books" className="view-all-link">View All →</Link>
         </div>
         {isLoading ? (
-          <div className="loading-state">Memuat koleksi buku...</div>
+          <div className="loading-state">Loading books collection...</div>
         ) : isError ? (
-          <div className="error">Gagal memuat koleksi buku</div>
+          <div className="error">Failed to load books collection</div>
         ) : (
           <div className="books-grid">
             {books.map((b) => (
@@ -116,14 +116,14 @@ export default function Dashboard() {
                 <div className="book-header">
                   <h4 className="book-title">{b.title}</h4>
                   <span className={`availability-badge ${b.copies_available > 0 ? 'available' : 'unavailable'}`}>
-                    {b.copies_available > 0 ? 'Tersedia' : 'Dipinjam'}
+                    {b.copies_available > 0 ? 'Available' : 'Borrowed'}
                   </span>
                 </div>
                 <p className="book-author">{b.author}</p>
                 <p className="book-category">{b.category}</p>
                 <div className="book-footer">
                   <span className="book-copies">
-                    {b.copies_available}/{b.copies_total} tersedia
+                    {b.copies_available}/{b.copies_total} available
                   </span>
                 </div>
               </div>
