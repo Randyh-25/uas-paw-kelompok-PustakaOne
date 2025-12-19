@@ -26,41 +26,60 @@ export default function HistoryPage() {
   });
 
   const items = historyData?.items || [];
+  const formatDate = (value) => value ? new Date(value).toLocaleDateString("id-ID") : "-";
+  const statusInfo = (row) => {
+    if (!row.return_date) return { label: "Dipinjam", className: "status-available" };
+    const overdue = row.due_date && new Date(row.due_date) < new Date(row.return_date);
+    return overdue ? { label: "Terlambat", className: "status-borrowed" } : { label: "Dikembalikan", className: "status-done" };
+  };
 
   return (
     <div className="card">
-      <h2>History</h2>
+      <h2>Riwayat</h2>
       <div className="filters">
         {isLibrarian && (
           <input
-            placeholder="Member ID (optional)"
+            placeholder="ID Anggota (opsional)"
             value={memberId}
             onChange={(e) => setMemberId(e.target.value)}
           />
         )}
         <button className="btn ghost" onClick={() => refetch()}>
-          Refresh
+          Muat ulang
         </button>
       </div>
       {isLoading ? (
-        <div>Loading...</div>
+        <div>Memuat...</div>
       ) : isError ? (
         <div className="error">{error.message}</div>
       ) : (
-        <div className="list">
-          {items.map((b) => (
-            <div key={b.id} className="item">
-              <div>
-                <strong>{b.book.title}</strong> by {b.book.author}
-                <div className="muted">
-                  Borrow: {b.borrow_date} · Due: {b.due_date}
+        <div className="table-card">
+          <div className="table header">
+            <span>Judul</span>
+            <span>Peminjam</span>
+            <span>Tanggal</span>
+            <span>Status</span>
+            <span>Denda</span>
+          </div>
+          {items.map((b) => {
+            const st = statusInfo(b);
+            return (
+              <div key={b.id} className="table row">
+                <div>
+                  <div className="strong">{b.book.title}</div>
+                  <div className="muted">oleh {b.book.author}</div>
                 </div>
-                <div className="muted">Returned: {b.return_date || "Not yet"}</div>
-                {b.fine > 0 && <div className="error">Fine: {b.fine}</div>}
+                <div className="muted">{b.member_id || "-"}</div>
+                <div className="muted">
+                  Pinjam {formatDate(b.borrow_date)}<br />
+                  Jatuh tempo {formatDate(b.due_date)}<br />
+                  Kembali {formatDate(b.return_date)}
+                </div>
+                <span className={`status-badge ${st.className}`}>{st.label}</span>
+                <div className="muted">{b.fine > 0 ? `Denda ${b.fine}` : "-"}</div>
               </div>
-              <div className="muted">Member ID: {b.member_id}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
