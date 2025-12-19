@@ -117,75 +117,153 @@ export default function BooksPage() {
 
   return (
     <div className="stack">
-      <div className="card">
-        <h2>Books</h2>
-        <div className="filters">
-          <input
-            placeholder="Search title/author"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <input
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          <button className="btn ghost" onClick={handleFilterChange}>
-            Apply
+      <div className="books-page-header">
+        <div>
+          <h1>Book Collection</h1>
+          <p className="books-subtitle">Discover and borrow your favorite books</p>
+        </div>
+        {isLibrarian && (
+          <button className="btn" onClick={() => setEditing({})}>
+            + Add New Book
+          </button>
+        )}
+      </div>
+
+      <div className="card books-filter-card">
+        <div className="books-filters">
+          <div className="filter-group">
+            <label>🔍 Search Books</label>
+            <input
+              className="search-input"
+              placeholder="Search title or author..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleFilterChange()}
+            />
+          </div>
+          <div className="filter-group">
+            <label>📚 Category</label>
+            <input
+              className="search-input"
+              placeholder="Enter category..."
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleFilterChange()}
+            />
+          </div>
+          <button className="btn" onClick={handleFilterChange}>
+            Apply Filters
           </button>
         </div>
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : isError ? (
-          <div className="error">{error.message}</div>
-        ) : (
-          <div className="list">
+      </div>
+
+      {isLoading ? (
+        <div className="loading-state">
+          <div className="spinner-large"></div>
+          <p>Loading book collection...</p>
+        </div>
+      ) : isError ? (
+        <div className="error-state">
+          <span className="error-icon">⚠️</span>
+          <p>{error.message}</p>
+        </div>
+      ) : books.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-icon">📚</span>
+          <h3>No books found</h3>
+          <p>Try changing your search filters</p>
+        </div>
+      ) : (
+        <>
+          <div className="books-grid">
             {books.map((b) => (
-              <div key={b.id} className="item">
-                <div>
-                  <strong>{b.title}</strong>
-                  <div className="muted">
-                    {b.author} · {b.category} · ISBN {b.isbn}
+              <div key={b.id} className="book-card-modern">
+                <div className="book-cover">
+                  <div className="book-cover-image">
+                    {b.cover_url ? (
+                      <img 
+                        src={b.cover_url} 
+                        alt={b.title} 
+                        className="book-cover-img"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <span className="book-icon" style={b.cover_url ? {display: 'none'} : {}}>📖</span>
+                    <div className="book-spine"></div>
                   </div>
-                  <div className="muted">
-                    Available {b.copies_available}/{b.copies_total}
-                  </div>
+                  {b.copies_available > 0 ? (
+                    <span className="badge badge-available">Available</span>
+                  ) : (
+                    <span className="badge badge-unavailable">Borrowed</span>
+                  )}
                 </div>
-                <div className="actions">
-                  {isLibrarian && (
-                    <>
-                      <button className="ghost" onClick={() => setEditing(b)}>
-                        Edit
-                      </button>
+                <div className="book-info">
+                  <h3 className="book-title-modern">{b.title}</h3>
+                  <p className="book-author-modern">oleh {b.author}</p>
+                  <div className="book-meta">
+                    <span className="meta-tag">{b.category}</span>
+                    <span className="meta-isbn">ISBN: {b.isbn}</span>
+                  </div>
+                  <div className="book-availability">
+                    <div className="availability-bar">
+                      <div 
+                        className="availability-fill" 
+                        style={{width: `${(b.copies_available / b.copies_total) * 100}%`}}
+                      ></div>
+                    </div>
+                    <span className="availability-text">
+                      {b.copies_available} of {b.copies_total} available
+                    </span>
+                  </div>
+                  <div className="book-actions">
+                    {isLibrarian && (
+                      <>
+                        <button 
+                          className="btn-icon btn-icon-edit" 
+                          onClick={() => setEditing(b)}
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn-icon btn-icon-delete"
+                          onClick={() => handleDelete(b.id)}
+                          disabled={deleteMutation.isPending}
+                          title="Hapus"
+                        >
+                          🗑️
+                        </button>
+                      </>
+                    )}
+                    {user && user.role === "member" && b.copies_available > 0 && (
                       <button
-                        className="ghost"
-                        onClick={() => handleDelete(b.id)}
-                        disabled={deleteMutation.isPending}
+                        className="btn btn-borrow"
+                        onClick={() => borrowMutation.mutate(b.id)}
+                        disabled={borrowMutation.isPending}
                       >
-                        Delete
+                        Borrow Book
                       </button>
-                    </>
-                  )}
-                  {user && user.role === "member" && b.copies_available > 0 && (
-                    <button
-                      className="btn"
-                      onClick={() => borrowMutation.mutate(b.id)}
-                      disabled={borrowMutation.isPending}
-                    >
-                      Borrow
-                    </button>
-                  )}
+                    )}
+                    {user && user.role === "member" && b.copies_available === 0 && (
+                      <button className="btn btn-disabled" disabled>
+                        Unavailable
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
-        <PaginationControls
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
-      </div>
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </>
+      )}
 
       {isLibrarian && (
         <div className="card">

@@ -44,6 +44,14 @@ export const bookApi = {
   remove: (token, id) => apiFetch(`/books/${id}`, { method: "DELETE", token }),
 };
 
+export const cloudinaryApi = {
+  uploadImage: (token, imageData) => apiFetch("/cloudinary/upload", { 
+    method: "POST", 
+    token, 
+    body: { image: imageData } 
+  }),
+};
+
 export const borrowApi = {
   borrow: (token, bookId) => apiFetch(`/borrow/${bookId}`, { method: "POST", token }),
   returnBook: (token, borrowingId) => apiFetch(`/return/${borrowingId}`, { method: "POST", token }),

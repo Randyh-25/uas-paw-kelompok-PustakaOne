@@ -12,3 +12,5 @@ def includeme(config):
 
     config.add_route("borrowings.list", "/api/borrowings")
     config.add_route("history.list", "/api/history")
+    
+    config.add_route("cloudinary.upload", "/api/cloudinary/upload")

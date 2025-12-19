@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from pyramid.config import Configurator
 from pyramid.response import Response
 from sqlalchemy import engine_from_config
@@ -6,6 +8,9 @@ from zope.sqlalchemy import register as zope_register
 
 
 from .models import Base
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def get_engine(settings):
@@ -53,6 +58,16 @@ def cors_tween_factory(handler, registry):
 
 def main(global_config, **settings):
     """Pyramid application factory."""
+    # Override settings with environment variables if they exist
+    settings['cloudinary.cloud_name'] = os.getenv('CLOUDINARY_CLOUD_NAME', settings.get('cloudinary.cloud_name', ''))
+    settings['cloudinary.api_key'] = os.getenv('CLOUDINARY_API_KEY', settings.get('cloudinary.api_key', ''))
+    settings['cloudinary.api_secret'] = os.getenv('CLOUDINARY_API_SECRET', settings.get('cloudinary.api_secret', ''))
+    settings['auth.secret'] = os.getenv('AUTH_SECRET', settings.get('auth.secret', 'change-me'))
+    
+    # Override database URL if provided in env
+    if os.getenv('DATABASE_URL'):
+        settings['sqlalchemy.url'] = os.getenv('DATABASE_URL')
+    
     engine = get_engine(settings)
     session_factory = get_session_factory(engine)
     Base.metadata.bind = engine

@@ -14,6 +14,7 @@ class Book(Base):
     category = Column(String(100), nullable=False)
     copies_total = Column(Integer, nullable=False, default=1)
     copies_available = Column(Integer, nullable=False, default=1)
+    cover_url = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
-import { bookApi, statusApi } from "../api/client";
+import { bookApi } from "../api/client";
 
 const quotes = [
   { text: "Today a reader, tomorrow a leader.", author: "Margaret Fuller" },
@@ -15,110 +15,119 @@ const quotes = [
 export default function Dashboard() {
   const { user } = useAuth();
   const [quote, setQuote] = useState({ text: "", author: "" });
-  const [serverStatus, setServerStatus] = useState(null);
-  const [statusLoading, setStatusLoading] = useState(false);
-  const [statusError, setStatusError] = useState(null);
 
   useEffect(() => {
     setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
   }, []);
 
   const { data: booksData, isLoading, isError } = useQuery({
-    queryKey: ["books", { limit: 5 }],
+    queryKey: ["books", { limit: 6 }],
     queryFn: () => bookApi.list(),
     initialData: { items: [] },
   });
-  const books = booksData?.items.slice(0, 5) || [];
-
-  const checkServerStatus = async () => {
-    setStatusLoading(true);
-    setStatusError(null);
-    setServerStatus(null);
-    try {
-      const res = await statusApi.check();
-      setServerStatus(res);
-    } catch (err) {
-      setStatusError(err.message);
-    } finally {
-      setStatusLoading(false);
-    }
-  };
+  const books = booksData?.items.slice(0, 6) || [];
+  const totalBooks = booksData?.items.length || 0;
 
   return (
-    <div className="stack">
-      <div className="card" style={{ textAlign: "center", fontStyle: "italic", backgroundColor: "var(--bg-tertiary)" }}>
-        <p style={{ fontSize: "1.1rem", margin: "0 0 8px 0" }}>
-          "{quote.text}"
-        </p>
-        <footer style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>&mdash; {quote.author}</footer>
-      </div>
-
-      <div className="card">
-        <h1>Selamat Datang di PustakaOne</h1>
-        <p>Kelola buku, pinjam, dan kembalikan dengan cepat.</p>
-        <ul className="bullets">
-          <li>Browse dan cari koleksi buku terbaru.</li>
-          <li>Pinjam buku (maks 3) dan pantau status peminjaman Anda.</li>
-          <li>Lakukan pengembalian dengan perhitungan denda otomatis jika terlambat.</li>
-          <li>Lihat riwayat transaksi untuk Member dan kelola data untuk Librarian.</li>
-        </ul>
-        {!user ? (
-          <div className="actions">
-            <Link className="btn" to="/login">Login untuk Meminjam</Link>
-            <Link className="btn ghost" to="/register">Daftar Akun Baru</Link>
-          </div>
-        ) : (
-          <div className="actions">
-            <Link className="btn" to="/books">Buka Koleksi Buku</Link>
-            <Link className="btn ghost" to="/borrowings">Lihat Peminjaman Saya</Link>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h2>Koleksi Terbaru</h2>
-        {isLoading ? (
-          <div>Memuat buku...</div>
-        ) : isError ? (
-          <div className="error">Gagal memuat koleksi buku.</div>
-        ) : (
-          <>
-            <div className="list">
-              {books.map((b) => (
-                <div key={b.id} className="item">
-                  <div>
-                    <strong>{b.title}</strong>
-                    <div className="muted">{b.author} · {b.category}</div>
-                  </div>
-                  <div className="muted">Tersedia: {b.copies_available} / {b.copies_total}</div>
-                </div>
-              ))}
+    <div className="dashboard-container">
+      {/* Hero Section */}
+      <div className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">Welcome to LibraryOne</h1>
+          <p className="hero-subtitle">
+            Modern digital library platform to manage and borrow book collections
+          </p>
+          {!user ? (
+            <div className="hero-actions">
+              <Link className="btn btn-hero" to="/login">Get Started</Link>
+              <Link className="btn ghost btn-hero" to="/books">Browse Collection</Link>
             </div>
-            <div className="actions" style={{ marginTop: "20px" }}>
-              <Link className="btn ghost" to="/books">Lihat Semua Buku &rarr;</Link>
+          ) : (
+            <div className="hero-actions">
+              <Link className="btn btn-hero" to="/books">Browse Books</Link>
+              <Link className="btn ghost btn-hero" to="/borrowings">My Borrowings</Link>
             </div>
-          </>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>Server Connection Test</h3>
-        <p className="muted">Periksa apakah frontend terhubung ke backend API.</p>
-        <div className="actions">
-          <button className="btn" onClick={checkServerStatus} disabled={statusLoading}>
-            {statusLoading ? "Checking..." : "Check Server Status"}
-          </button>
+          )}
         </div>
-        {serverStatus && (
-          <div className="status-success">
-            <strong>✓ Server OK</strong>
-            <pre>{JSON.stringify(serverStatus, null, 2)}</pre>
-          </div>
-        )}
-        {statusError && (
-          <div style={{ marginTop: "12px" }} className="error">
-            <strong>✗ Connection Failed</strong>
-            <div>{statusError}</div>
+      </div>
+
+      {/* Quote Section */}
+      <div className="quote-section">
+        <div className="quote-content">
+          <p className="quote-text">"{quote.text}"</p>
+          <p className="quote-author">— {quote.author}</p>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="features-grid">
+        <div className="feature-card">
+          <h3>Complete Collection</h3>
+          <p>Thousands of books from various categories ready to borrow</p>
+        </div>
+        <div className="feature-card">
+          <h3>Easy Search</h3>
+          <p>Find your favorite books with quick filters and search</p>
+        </div>
+        <div className="feature-card">
+          <h3>Quick Borrow</h3>
+          <p>Automatic borrowing system with real-time tracking</p>
+        </div>
+        <div className="feature-card">
+          <h3>Complete History</h3>
+          <p>Monitor all borrowing and return activities</p>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="stats-section">
+        <div className="stat-item">
+          <div className="stat-value">{totalBooks}+</div>
+          <div className="stat-label">Total Books</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">14 Days</div>
+          <div className="stat-label">Borrow Period</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">3 Books</div>
+          <div className="stat-label">Max Borrow</div>
+        </div>
+        <div className="stat-item">
+          <div className="stat-value">24/7</div>
+          <div className="stat-label">Online Access</div>
+        </div>
+      </div>
+
+      {/* Latest Books Section */}
+      <div className="card">
+        <div className="section-header">
+          <h2>Latest Collection</h2>
+          <Link to="/books" className="view-all-link">View All →</Link>
+        </div>
+        {isLoading ? (
+          <div className="loading-state">Loading books collection...</div>
+        ) : isError ? (
+          <div className="error">Failed to load books collection</div>
+        ) : (
+          <div className="books-grid">
+            {books.map((b) => (
+              <div key={b.id} className="book-card">
+                <div className="book-header">
+                  <h4 className="book-title">{b.title}</h4>
+                  <span className={`availability-badge ${b.copies_available > 0 ? 'available' : 'unavailable'}`}>
+                    {b.copies_available > 0 ? 'Available' : 'Borrowed'}
+                  </span>
+                </div>
+                <p className="book-author">{b.author}</p>
+                <p className="book-category">{b.category}</p>
+                <div className="book-footer">
+                  <span className="book-copies">
+                    {b.copies_available}/{b.copies_total} available
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -32,14 +32,16 @@ export default function NavBar() {
         ))}
       </div>
       <div className="nav-right">
-        <button onClick={toggleTheme} className="ghost" style={{ marginRight: '10px', padding: '6px' }}>
+        <button onClick={toggleTheme} className="ghost theme-toggle">
           {theme === "light" ? "🌙" : "☀️"}
         </button>
         {user ? (
           <>
-            <span className="pill">{user.role}</span>
-            <span>{user.name}</span>
-            <button className="ghost" onClick={logout}>
+            <span className={`role-badge role-${user.role}`}>
+              {user.role}
+            </span>
+            <span className="user-name">{user.name}</span>
+            <button className="ghost logout-btn" onClick={logout}>
               Logout
             </button>
           </>

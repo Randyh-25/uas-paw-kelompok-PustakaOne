@@ -16,6 +16,7 @@ def serialize_book(book: Book):
         "category": book.category,
         "copies_total": book.copies_total,
         "copies_available": book.copies_available,
+        "cover_url": book.cover_url,
     }
 
 
@@ -82,6 +83,7 @@ def create_book(request):
         category=data["category"],
         copies_total=copies_total,
         copies_available=copies_available,
+        cover_url=data.get("cover_url"),
     )
     request.dbsession.add(book)
     return {"message": "Book created", "book": serialize_book(book)}
@@ -97,7 +99,7 @@ def update_book(request):
         raise HTTPNotFound(json_body={"error": "Book not found"})
 
     data = json_payload(request)
-    for field in ["title", "author", "isbn", "category"]:
+    for field in ["title", "author", "isbn", "category", "cover_url"]:
         if field in data and data[field]:
             setattr(book, field, data[field])
 
