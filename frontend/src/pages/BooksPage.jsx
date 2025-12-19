@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bookApi, borrowApi } from "../api/client";
@@ -84,6 +84,16 @@ export default function BooksPage() {
     queryFn: () => bookApi.list(queryParams),
     initialData: { items: [], total_pages: 1, page: 1 },
   });
+
+  const categoryOptions = useMemo(() => {
+    return (data?.items || [])
+      .map((b) => b.category)
+      .filter(Boolean)
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .filter((c, idx, arr) => arr.indexOf(c) === idx)
+      .sort((a, b) => a.localeCompare(b, "id", { sensitivity: "base" }));
+  }, [data]);
 
   const createMutation = useMutation({
     mutationFn: (newData) => bookApi.create(token, newData),
@@ -319,6 +329,7 @@ export default function BooksPage() {
                   onSubmit={handleSubmit}
                   onCancel={closeEditor}
                   formId={formId}
+                  categories={categoryOptions}
                   showActions={false}
                 />
               </div>

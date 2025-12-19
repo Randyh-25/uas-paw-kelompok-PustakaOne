@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { cloudinaryApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-export default function BookForm({ initial, onSubmit, onCancel, formId, showActions = true }) {
+export default function BookForm({ initial, onSubmit, onCancel, formId, showActions = true, categories = [] }) {
   const [previewImage, setPreviewImage] = useState(initial?.cover_url || "");
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { token } = useAuth();
+  const categoryListId = useMemo(() => `${formId || "book-form"}-categories`, [formId]);
   
   const {
     register,
@@ -124,6 +125,15 @@ export default function BookForm({ initial, onSubmit, onCancel, formId, showActi
     setPreviewImage(initial?.cover_url || "");
   }, [initial, reset]);
 
+  const categoryOptions = useMemo(() => {
+    return (categories || [])
+      .filter(Boolean)
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .filter((c, idx, arr) => arr.indexOf(c) === idx)
+      .sort((a, b) => a.localeCompare(b, "id", { sensitivity: "base" }));
+  }, [categories]);
+
   const handleFormSubmit = (data) => {
     if (uploading) {
       alert("Please wait for image upload to complete");
@@ -164,10 +174,20 @@ export default function BookForm({ initial, onSubmit, onCancel, formId, showActi
         {errors.isbn && <span className="error">{errors.isbn.message}</span>}
       </div>
       <div className="form-group">
-        <input
-          placeholder="Kategori"
-          {...register("category", { required: "Kategori wajib diisi" })}
-        />
+        <label>
+          <span>Kategori</span>
+          <input
+            list={categoryListId}
+            placeholder="Pilih atau ketik kategori"
+            autoComplete="off"
+            {...register("category", { required: "Kategori wajib diisi" })}
+          />
+          <datalist id={categoryListId}>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </label>
         {errors.category && <span className="error">{errors.category.message}</span>}
       </div>
       <div className="form-group">
