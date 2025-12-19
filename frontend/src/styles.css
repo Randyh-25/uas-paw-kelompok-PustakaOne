@@ -434,6 +434,12 @@ textarea {
   gap: 32px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
 .hero-section {
   background: var(--bg-primary);
   border-radius: 14px;
@@ -556,11 +562,38 @@ textarea {
   text-align: center;
 }
 
+
+.chip.hollow {
+  background: transparent;
+  border-style: dashed;
+}
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--accent-color);
   margin-bottom: 8px;
+}
+
+.compact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-header.tight {
+  margin-bottom: 4px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .stat-label {
@@ -816,6 +849,11 @@ textarea {
   gap: 8px;
 }
 
+.book-card-compact.mini {
+  padding: 10px;
+  gap: 6px;
+}
+
 .book-thumb {
   width: 100%;
   aspect-ratio: 1 / 1.6;
@@ -829,6 +867,11 @@ textarea {
   justify-content: center;
   position: relative;
   isolation: isolate;
+}
+
+.book-thumb.small {
+  max-width: 120px;
+  margin: 0 auto;
 }
 
 .book-thumb::before {
