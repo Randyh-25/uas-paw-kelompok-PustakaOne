@@ -9,14 +9,14 @@ export default function NavBar() {
 
   const links = user
     ? [
-        { to: "/", label: "Dashboard" },
-        { to: "/books", label: "Books" },
-        { to: "/borrowings", label: "Borrowings" },
-        { to: "/history", label: "History" },
+        { to: "/", label: "Dasbor" },
+        { to: "/books", label: "Buku" },
+        { to: "/borrowings", label: "Peminjaman" },
+        { to: "/history", label: "Riwayat" },
       ]
     : [
-        { to: "/", label: "Dashboard" },
-        { to: "/books", label: "Books" },
+        { to: "/", label: "Dasbor" },
+        { to: "/books", label: "Buku" },
       ];
 
   const isActive = (path) => location.pathname === path;
@@ -42,16 +42,16 @@ export default function NavBar() {
             </span>
             <span className="user-name">{user.name}</span>
             <button className="ghost logout-btn" onClick={logout}>
-              Logout
+              Keluar
             </button>
           </>
         ) : (
           <>
             <Link to="/login" className={isActive("/login") ? "active" : ""}>
-              Login
+              Masuk
             </Link>
             <Link to="/register" className={isActive("/register") ? "active" : ""}>
-              Register
+              Daftar
             </Link>
           </>
         )}

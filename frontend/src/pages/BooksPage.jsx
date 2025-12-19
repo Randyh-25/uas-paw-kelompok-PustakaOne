@@ -119,12 +119,12 @@ export default function BooksPage() {
     <div className="stack">
       <div className="books-page-header">
         <div>
-          <h1>Book Collection</h1>
-          <p className="books-subtitle">Discover and borrow your favorite books</p>
+          <h1>Koleksi Buku</h1>
+          <p className="books-subtitle">Cari, kelola, dan pinjam buku</p>
         </div>
         {isLibrarian && (
           <button className="btn" onClick={() => setEditing({})}>
-            + Add New Book
+            + Tambah Buku
           </button>
         )}
       </div>
@@ -132,27 +132,27 @@ export default function BooksPage() {
       <div className="card books-filter-card">
         <div className="books-filters">
           <div className="filter-group">
-            <label>🔍 Search Books</label>
+            <label>Cari Buku</label>
             <input
               className="search-input"
-              placeholder="Search title or author..."
+              placeholder="Judul atau penulis"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleFilterChange()}
             />
           </div>
           <div className="filter-group">
-            <label>📚 Category</label>
+            <label>Kategori</label>
             <input
               className="search-input"
-              placeholder="Enter category..."
+              placeholder="Masukkan kategori"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleFilterChange()}
             />
           </div>
           <button className="btn" onClick={handleFilterChange}>
-            Apply Filters
+            Terapkan
           </button>
         </div>
       </div>
@@ -175,84 +175,66 @@ export default function BooksPage() {
         </div>
       ) : (
         <>
-          <div className="books-grid">
+          <div className="books-grid compact">
             {books.map((b) => (
-              <div key={b.id} className="book-card-modern">
-                <div className="book-cover">
-                  <div className="book-cover-image">
-                    {b.cover_url ? (
-                      <img 
-                        src={b.cover_url} 
-                        alt={b.title} 
-                        className="book-cover-img"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'block';
-                        }}
-                      />
-                    ) : null}
-                    <span className="book-icon" style={b.cover_url ? {display: 'none'} : {}}>📖</span>
-                    <div className="book-spine"></div>
-                  </div>
-                  {b.copies_available > 0 ? (
-                    <span className="badge badge-available">Available</span>
+              <div key={b.id} className="book-card-compact">
+                <div className="book-thumb">
+                  {b.cover_url ? (
+                    <img src={b.cover_url} alt={b.title} onError={(e) => { e.target.style.display = "none"; }} />
                   ) : (
-                    <span className="badge badge-unavailable">Borrowed</span>
+                    <span className="book-thumb-fallback">📘</span>
                   )}
                 </div>
-                <div className="book-info">
-                  <h3 className="book-title-modern">{b.title}</h3>
-                  <p className="book-author-modern">oleh {b.author}</p>
-                  <div className="book-meta">
-                    <span className="meta-tag">{b.category}</span>
-                    <span className="meta-isbn">ISBN: {b.isbn}</span>
-                  </div>
-                  <div className="book-availability">
-                    <div className="availability-bar">
-                      <div 
-                        className="availability-fill" 
-                        style={{width: `${(b.copies_available / b.copies_total) * 100}%`}}
-                      ></div>
+                <div className="book-card-main">
+                  <div className="book-card-head">
+                    <div>
+                      <h3>{b.title}</h3>
+                      <p className="muted">oleh {b.author}</p>
                     </div>
-                    <span className="availability-text">
-                      {b.copies_available} of {b.copies_total} available
+                    <span className={`status-badge ${b.copies_available > 0 ? "status-available" : "status-borrowed"}`}>
+                      {b.copies_available > 0 ? "Tersedia" : "Dipinjam"}
                     </span>
                   </div>
-                  <div className="book-actions">
-                    {isLibrarian && (
-                      <>
-                        <button 
-                          className="btn-icon btn-icon-edit" 
-                          onClick={() => setEditing(b)}
-                          title="Edit"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-icon btn-icon-delete"
-                          onClick={() => handleDelete(b.id)}
-                          disabled={deleteMutation.isPending}
-                          title="Hapus"
-                        >
-                          🗑️
-                        </button>
-                      </>
-                    )}
-                    {user && user.role === "member" && b.copies_available > 0 && (
-                      <button
-                        className="btn btn-borrow"
-                        onClick={() => borrowMutation.mutate(b.id)}
-                        disabled={borrowMutation.isPending}
-                      >
-                        Borrow Book
-                      </button>
-                    )}
-                    {user && user.role === "member" && b.copies_available === 0 && (
-                      <button className="btn btn-disabled" disabled>
-                        Unavailable
-                      </button>
-                    )}
+                  <div className="book-card-meta">
+                    <span>{b.category || "Tanpa kategori"}</span>
+                    <span>ISBN {b.isbn}</span>
+                    <span>{b.copies_available}/{b.copies_total} stok</span>
                   </div>
+                </div>
+                <div className="book-card-actions">
+                  {isLibrarian && (
+                    <>
+                      <button 
+                        className="btn ghost"
+                        onClick={() => setEditing(b)}
+                        title="Edit"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn ghost"
+                        onClick={() => handleDelete(b.id)}
+                        disabled={deleteMutation.isPending}
+                        title="Hapus"
+                      >
+                        Hapus
+                      </button>
+                    </>
+                  )}
+                  {user && user.role === "member" && b.copies_available > 0 && (
+                    <button
+                      className="btn"
+                      onClick={() => borrowMutation.mutate(b.id)}
+                      disabled={borrowMutation.isPending}
+                    >
+                      Pinjam
+                    </button>
+                  )}
+                  {user && user.role === "member" && b.copies_available === 0 && (
+                    <button className="btn ghost" disabled>
+                      Tidak tersedia
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -267,7 +249,7 @@ export default function BooksPage() {
 
       {isLibrarian && (
         <div className="card">
-          <h3>{editing ? "Edit Book" : "Add Book"}</h3>
+          <h3>{editing ? "Edit Buku" : "Tambah Buku"}</h3>
           <BookForm
             initial={editing || undefined}
             onSubmit={(data) =>

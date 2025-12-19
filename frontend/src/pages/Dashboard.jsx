@@ -28,87 +28,58 @@ export default function Dashboard() {
   const books = booksData?.items.slice(0, 6) || [];
   const totalBooks = booksData?.items.length || 0;
 
+  const isGuest = !user;
+
   return (
     <div className="dashboard-container">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">Welcome to PustakaOne</h1>
-          <p className="hero-subtitle">
-            Modern digital library platform to manage and borrow book collections
-          </p>
-          {!user ? (
+      {isGuest && (
+        <div className="hero-section minimal-hero">
+          <div className="hero-content">
+            <h1 className="hero-title">PustakaOne</h1>
+            <p className="hero-subtitle">
+              Platform perpustakaan digital untuk mengelola dan meminjam koleksi.
+            </p>
             <div className="hero-actions">
-              <Link className="btn btn-hero" to="/login">Get Started</Link>
-              <Link className="btn ghost btn-hero" to="/books">Browse Collection</Link>
+              <Link className="btn" to="/login">Masuk</Link>
+              <Link className="btn ghost" to="/books">Lihat Koleksi</Link>
             </div>
-          ) : (
-            <div className="hero-actions">
-              <Link className="btn btn-hero" to="/books">Browse Books</Link>
-              <Link className="btn ghost btn-hero" to="/borrowings">My Borrowings</Link>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Quote Section */}
-      <div className="quote-section">
-        <div className="quote-content">
-          <p className="quote-text">"{quote.text}"</p>
-          <p className="quote-author">— {quote.author}</p>
+      {!isGuest && (
+        <div className="card dashboard-quick">
+          <div>
+            <h2>Ringkasan</h2>
+            <p className="muted">Fokus ke data dan tugas harian.</p>
+          </div>
+          <div className="stat-chips">
+            <div className="chip">{totalBooks} buku</div>
+            <div className="chip">Masa pinjam 14 hari</div>
+            <div className="chip">Maks 3 buku</div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Features Section */}
-      <div className="features-grid">
-        <div className="feature-card">
-          <h3>Complete Collection</h3>
-          <p>Thousands of books from various categories ready to borrow</p>
+      {isGuest && (
+        <div className="quote-section">
+          <div className="quote-content">
+            <p className="quote-text">"{quote.text}"</p>
+            <p className="quote-author">— {quote.author}</p>
+          </div>
         </div>
-        <div className="feature-card">
-          <h3>Easy Search</h3>
-          <p>Find your favorite books with quick filters and search</p>
-        </div>
-        <div className="feature-card">
-          <h3>Quick Borrow</h3>
-          <p>Automatic borrowing system with real-time tracking</p>
-        </div>
-        <div className="feature-card">
-          <h3>Complete History</h3>
-          <p>Monitor all borrowing and return activities</p>
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="stats-section">
-        <div className="stat-item">
-          <div className="stat-value">{totalBooks}+</div>
-          <div className="stat-label">Total Books</div>
-        </div>
-        <div className="stat-item">
-          <div className="stat-value">14 Days</div>
-          <div className="stat-label">Borrow Period</div>
-        </div>
-        <div className="stat-item">
-          <div className="stat-value">3 Books</div>
-          <div className="stat-label">Max Borrow</div>
-        </div>
-        <div className="stat-item">
-          <div className="stat-value">24/7</div>
-          <div className="stat-label">Online Access</div>
-        </div>
-      </div>
+      )}
 
       {/* Latest Books Section */}
       <div className="card">
         <div className="section-header">
-          <h2>Latest Collection</h2>
-          <Link to="/books" className="view-all-link">View All →</Link>
+          <h2>Koleksi Terbaru</h2>
+          <Link to="/books" className="view-all-link">Lihat semua →</Link>
         </div>
         {isLoading ? (
-          <div className="loading-state">Loading books collection...</div>
+          <div className="loading-state">Memuat koleksi buku...</div>
         ) : isError ? (
-          <div className="error">Failed to load books collection</div>
+          <div className="error">Gagal memuat koleksi</div>
         ) : (
           <div className="books-grid">
             {books.map((b) => (
@@ -116,14 +87,14 @@ export default function Dashboard() {
                 <div className="book-header">
                   <h4 className="book-title">{b.title}</h4>
                   <span className={`availability-badge ${b.copies_available > 0 ? 'available' : 'unavailable'}`}>
-                    {b.copies_available > 0 ? 'Available' : 'Borrowed'}
+                    {b.copies_available > 0 ? 'Tersedia' : 'Dipinjam'}
                   </span>
                 </div>
                 <p className="book-author">{b.author}</p>
                 <p className="book-category">{b.category}</p>
                 <div className="book-footer">
                   <span className="book-copies">
-                    {b.copies_available}/{b.copies_total} available
+                    {b.copies_available}/{b.copies_total} tersedia
                   </span>
                 </div>
               </div>
