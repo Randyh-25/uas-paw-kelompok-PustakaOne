@@ -75,9 +75,23 @@ export default function BorrowingsPage() {
   const items = data?.items || [];
   const totalPages = data?.total_pages || 1;
 
+  const formatDate = (value) => value ? new Date(value).toLocaleDateString("id-ID") : "-";
+  const statusInfo = (row) => {
+    if (row.return_date) return { label: "Dikembalikan", className: "status-done" };
+    const overdue = row.due_date && new Date(row.due_date) < new Date();
+    return overdue
+      ? { label: "Terlambat", className: "status-borrowed" }
+      : { label: "Dipinjam", className: "status-available" };
+  };
+  const daysLeft = (row) => {
+    if (!row.due_date) return "-";
+    const diff = Math.ceil((new Date(row.due_date) - new Date()) / (1000 * 60 * 60 * 24));
+    return diff >= 0 ? `${diff} hari lagi` : `${Math.abs(diff)} hari terlambat`;
+  };
+
   return (
     <div className="card">
-      <h2>Borrowings</h2>
+      <h2>Peminjaman</h2>
       <div className="filters">
         <label className="inline">
           <input
@@ -85,50 +99,63 @@ export default function BorrowingsPage() {
             checked={activeOnly}
             onChange={(e) => setActiveOnly(e.target.checked)}
           />
-          Active only
+          Hanya aktif
         </label>
         {user.role === "librarian" && (
           <input
-            placeholder="Member ID (optional)"
+            placeholder="ID Anggota (opsional)"
             value={memberId}
             onChange={(e) => setMemberId(e.target.value)}
           />
         )}
         <button className="btn ghost" onClick={handleFilterChange}>
-          Refresh
+          Muat ulang
         </button>
       </div>
       {isLoading ? (
-        <div>Loading...</div>
+        <div>Memuat...</div>
       ) : isError ? (
         <div className="error">{error.message}</div>
       ) : (
         <>
-          <div className="list">
-            {items.map((b) => (
-              <div key={b.id} className="item">
-                <div>
-                  <strong>{b.book.title}</strong> by {b.book.author}
-                  <div className="muted">
-                    Borrowed: {b.borrow_date} · Due: {b.due_date}
+          <div className="table-card">
+            <div className="table header">
+              <span>Judul</span>
+              <span>Peminjam</span>
+              <span>Tanggal</span>
+              <span>Status</span>
+              <span>Aksi</span>
+            </div>
+            {items.map((b) => {
+              const st = statusInfo(b);
+              return (
+                <div key={b.id} className="table row">
+                  <div>
+                    <div className="strong">{b.book.title}</div>
+                    <div className="muted">oleh {b.book.author}</div>
                   </div>
-                  <div className="muted">Borrowing ID: {b.id}</div>
-                  {b.return_date && <div className="muted">Returned: {b.return_date}</div>}
-                  {b.fine > 0 && <div className="error">Fine: {b.fine}</div>}
+                  <div className="muted">{b.member_id || "-"}</div>
+                  <div className="muted">
+                    Pinjam {formatDate(b.borrow_date)}<br />
+                    Jatuh tempo {formatDate(b.due_date)}<br />
+                    <span className="muted">{daysLeft(b)}</span>
+                  </div>
+                  <span className={`status-badge ${st.className}`}>{st.label}</span>
+                  <div className="table-actions">
+                    {!b.return_date && (
+                      <button
+                        className="btn ghost"
+                        onClick={() => returnMutation.mutate(b.id)}
+                        disabled={returnMutation.isPending}
+                      >
+                        Tandai kembali
+                      </button>
+                    )}
+                    {b.fine > 0 && <div className="error">Denda: {b.fine}</div>}
+                  </div>
                 </div>
-                <div className="actions">
-                  {!b.return_date && (
-                    <button
-                      className="btn ghost"
-                      onClick={() => returnMutation.mutate(b.id)}
-                      disabled={returnMutation.isPending}
-                    >
-                      Mark Returned
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <PaginationControls
             page={page}

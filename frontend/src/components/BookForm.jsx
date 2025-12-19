@@ -137,38 +137,38 @@ export default function BookForm({ initial, onSubmit, onCancel }) {
   };
 
   return (
-    <form className="form grid" onSubmit={handleSubmit(handleFormSubmit)}>
+    <form className="form grid book-form" onSubmit={handleSubmit(handleFormSubmit)}>
       <div className="form-group">
         <input
-          placeholder="Title"
-          {...register("title", { required: "Title is required" })}
+          placeholder="Judul"
+          {...register("title", { required: "Judul wajib diisi" })}
         />
         {errors.title && <span className="error">{errors.title.message}</span>}
       </div>
       <div className="form-group">
         <input
-          placeholder="Author"
-          {...register("author", { required: "Author is required" })}
+          placeholder="Penulis"
+          {...register("author", { required: "Penulis wajib diisi" })}
         />
         {errors.author && <span className="error">{errors.author.message}</span>}
       </div>
       <div className="form-group">
         <input
           placeholder="ISBN"
-          {...register("isbn", { required: "ISBN is required" })}
+          {...register("isbn", { required: "ISBN wajib diisi" })}
         />
         {errors.isbn && <span className="error">{errors.isbn.message}</span>}
       </div>
       <div className="form-group">
         <input
-          placeholder="Category"
-          {...register("category", { required: "Category is required" })}
+          placeholder="Kategori"
+          {...register("category", { required: "Kategori wajib diisi" })}
         />
         {errors.category && <span className="error">{errors.category.message}</span>}
       </div>
       <div className="form-group" style={{ gridColumn: "1 / -1" }}>
         <label>
-          <span>Book Cover Image (optional)</span>
+          <span>Sampul buku (opsional)</span>
           <div className="image-upload-container">
             <div 
               className={`drop-zone ${isDragging ? 'dragging' : ''} ${uploading ? 'uploading' : ''}`}
@@ -189,15 +189,15 @@ export default function BookForm({ initial, onSubmit, onCancel }) {
                 {uploading ? (
                   <>
                     <div className="drop-zone-icon">⏳</div>
-                    <p className="drop-zone-text">Uploading to Cloudinary...</p>
+                    <p className="drop-zone-text">Mengunggah ke Cloudinary...</p>
                   </>
                 ) : (
                   <>
                     <div className="drop-zone-icon">📷</div>
                     <label htmlFor="cover-image-upload" className="upload-button">
-                      Choose Image
+                      Pilih gambar
                     </label>
-                    <p className="drop-zone-text">or drag and drop image here</p>
+                    <p className="drop-zone-text">atau seret dan lepas di sini</p>
                   </>
                 )}
               </div>
@@ -221,13 +221,13 @@ export default function BookForm({ initial, onSubmit, onCancel }) {
           </div>
         </label>
         <small style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-          Upload a book cover image (Max 5MB, JPG/PNG) - will be uploaded to Cloudinary
+          Unggah sampul (maks 5MB, JPG/PNG) - dikirim ke Cloudinary
         </small>
         <input type="hidden" {...register("cover_url")} />
       </div>
       <div className="form-group">
         <label>
-          <span>Total Copies</span>
+          <span>Total eksemplar</span>
           <div className="number-input-wrapper">
             <button
               type="button"
@@ -261,7 +261,7 @@ export default function BookForm({ initial, onSubmit, onCancel }) {
       </div>
       <div className="form-group">
         <label>
-          <span>Available Copies</span>
+          <span>Eksemplar tersedia</span>
           <div className="number-input-wrapper">
             <button
               type="button"
@@ -295,11 +295,11 @@ export default function BookForm({ initial, onSubmit, onCancel }) {
       </div>
       <div className="actions">
         <button className="btn" type="submit">
-          Save
+          Simpan
         </button>
         {onCancel && (
           <button className="btn ghost" type="button" onClick={onCancel}>
-            Cancel
+            Batal
           </button>
         )}
       </div>
